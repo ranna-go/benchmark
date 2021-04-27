@@ -102,9 +102,9 @@ func main() {
 		tab.AppendSeparator()
 		tab.AppendRows([]table.Row{
 			{"# Successful", n},
-			{"% Successful", n / *number * 100},
+			{"% Successful", float64(n) / float64(*number) * 100.0},
 			{"# Erroneous", *number - n},
-			{"% Erroneous", (*number - n) / *number * 100},
+			{"% Erroneous", float64(*number-n) / float64(*number) * 100.0},
 			{"Average Request to Response Time", av.ReqDur},
 			{"Average Execution Time", av.ExecDur},
 		})

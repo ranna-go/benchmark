@@ -7,6 +7,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/ranna-go/benchmark/pkg/workerpool"
 	ranna "github.com/ranna-go/ranna/pkg/client"
 	models "github.com/ranna-go/ranna/pkg/models"
@@ -14,11 +15,12 @@ import (
 )
 
 var (
-	endpoint = flag.String("e", "", "ranna API endpoint")
-	loglevel = flag.Int("loglevel", int(logrus.InfoLevel), "logger level")
-	number   = flag.Int("n", 5, "number of total requests")
-	parallel = flag.Int("p", 5, "parallel running requests")
-	snippets = flag.String("snippets", "./snippets", "snippets directory")
+	endpoint    = flag.String("e", "", "ranna API endpoint")
+	loglevel    = flag.Int("loglevel", int(logrus.InfoLevel), "logger level")
+	number      = flag.Int("n", 5, "number of total requests")
+	parallel    = flag.Int("p", 5, "parallel running requests")
+	snippets    = flag.String("snippets", "./snippets", "snippets directory")
+	prettyPrint = flag.Bool("pp", false, "pretty print results")
 )
 
 type timing struct {
@@ -78,6 +80,36 @@ func main() {
 		"successful": n,
 		"errros":     *number - n,
 	}).Info("bench result")
+
+	if *prettyPrint {
+		tab := table.NewWriter()
+		tab.SetOutputMirror(os.Stdout)
+		tab.SetStyle(table.StyleLight)
+		tab.AppendHeader(table.Row{"Used Benchmark Parameters"})
+		tab.AppendSeparator()
+		tab.AppendRows([]table.Row{
+			{"Endpoint", *endpoint},
+			{"# Snippets", len(sources)},
+			{"# Requests", *number},
+			{"# Parallel Reqeusts", *parallel},
+		})
+		tab.Render()
+
+		tab = table.NewWriter()
+		tab.SetOutputMirror(os.Stdout)
+		tab.SetStyle(table.StyleLight)
+		tab.AppendHeader(table.Row{"Benchmark Results"})
+		tab.AppendSeparator()
+		tab.AppendRows([]table.Row{
+			{"# Successful", n},
+			{"% Successful", n / *number * 100},
+			{"# Erroneous", *number - n},
+			{"% Erroneous", (*number - n) / *number * 100},
+			{"Average Request to Response Time", av.ReqDur},
+			{"Average Execution Time", av.ExecDur},
+		})
+		tab.Render()
+	}
 }
 
 func pickReq(arr []*models.ExecutionRequest) *models.ExecutionRequest {
